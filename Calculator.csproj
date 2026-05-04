@@ -14,4 +14,10 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Exclude web-related files that belong to CalculatorWeb.csproj -->
+    <Compile Remove="Startup.cs" />
+    <Compile Remove="WebProgram.cs" />
+  </ItemGroup>
+
 </Project>
