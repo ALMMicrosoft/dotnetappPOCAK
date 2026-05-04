@@ -4,6 +4,26 @@
 
 A modern calculator application built with .NET Framework 4.8, available in both **Windows Forms (desktop)** and **Web** versions.
 
+## ⚠️ SECURITY WARNING
+
+**THIS APPLICATION CONTAINS INTENTIONAL SECURITY VULNERABILITIES FOR EDUCATIONAL PURPOSES!**
+
+🔴 **DO NOT USE IN PRODUCTION**  
+🔴 **DO NOT DEPLOY TO PUBLIC SERVERS**  
+🔴 **FOR SECURITY TESTING AND TRAINING ONLY**
+
+This code includes 17+ intentional security vulnerabilities including:
+- SQL Injection
+- Path Traversal
+- Cross-Site Scripting (XSS)
+- Hard-coded Credentials
+- Insecure Deserialization
+- And more...
+
+📖 **See [SECURITY_VULNERABILITIES.md](SECURITY_VULNERABILITIES.md) for complete documentation**
+
+---
+
 ## 🚀 Features
 
 - **Addition**: Add two numbers

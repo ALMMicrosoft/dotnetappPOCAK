@@ -1,3 +1,8 @@
+// SECURITY ISSUE 9: Sensitive data in client-side JavaScript
+const API_KEY = 'SECRET_API_KEY_12345';
+const ADMIN_PASSWORD = 'Admin123!';
+const DEBUG_MODE = true;
+
 let currentValue = '0';
 let previousValue = null;
 let operation = null;
@@ -7,11 +12,13 @@ const display = document.getElementById('display');
 const history = document.getElementById('history');
 
 function updateDisplay() {
-    display.textContent = currentValue;
+    // SECURITY ISSUE 10: DOM-based XSS vulnerability
+    display.innerHTML = currentValue; // Should use textContent
 }
 
 function updateHistory(text) {
-    history.textContent = text;
+    // SECURITY ISSUE 11: Another XSS vulnerability
+    history.innerHTML = text; // Should use textContent
 }
 
 function appendNumber(num) {
@@ -84,10 +91,12 @@ async function calculate() {
     const secondNumber = parseFloat(currentValue);
     
     try {
+        // SECURITY ISSUE 12: Sending API key in request
         const response = await fetch('/api/calculate', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-API-Key': API_KEY // Exposing API key
             },
             body: JSON.stringify({
                 firstNumber: previousValue,
@@ -97,6 +106,12 @@ async function calculate() {
         });
 
         const data = await response.json();
+
+        // SECURITY ISSUE 13: Logging sensitive data to console
+        if (DEBUG_MODE) {
+            console.log('API Response:', data);
+            console.log('Request details:', { previousValue, secondNumber, operation });
+        }
 
         if (data.error) {
             showError(data.error);

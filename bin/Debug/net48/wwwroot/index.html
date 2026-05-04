@@ -5,8 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>.NET Framework Calculator - Web</title>
     <link rel="stylesheet" href="styles.css">
+    
+    <!-- SECURITY ISSUE 14: No Content Security Policy -->
+    <!-- SECURITY ISSUE 15: Including external scripts from untrusted CDN without SRI -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- SECURITY ISSUE 16: Inline JavaScript (potential XSS) -->
+    <script>
+        var adminMode = true;
+        var secretToken = "abc123xyz789";
+    </script>
 </head>
 <body>
+    <!-- SECURITY ISSUE 17: Hidden admin credentials in HTML comments -->
+    <!-- Admin Panel: http://localhost:5000/admin 
+         Username: admin
+         Password: Admin123! -->
+    
     <div class="container">
         <div class="calculator">
             <div class="header">
