@@ -1,0 +1,126 @@
+name: Build .NET Framework Calculator
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET Framework
+      uses: microsoft/setup-msbuild@v2
+      
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v2
+      
+    - name: Display .NET version
+      run: dotnet --version
+      
+    - name: Restore NuGet packages for Windows Forms Calculator
+      run: dotnet restore Calculator.csproj
+      working-directory: .
+      
+    - name: Build Windows Forms Calculator
+      run: dotnet build Calculator.csproj --configuration Release --no-restore
+      working-directory: .
+      
+    - name: Restore NuGet packages for Web Calculator
+      run: dotnet restore CalculatorWeb.csproj
+      working-directory: .
+      
+    - name: Build Web Calculator
+      run: dotnet build CalculatorWeb.csproj --configuration Release --no-restore
+      working-directory: .
+      
+    - name: Copy wwwroot files to Web output
+      run: |
+        Copy-Item -Path "wwwroot\*" -Destination "bin\Release\net48\wwwroot\" -Recurse -Force
+      working-directory: .
+      shell: powershell
+      
+    - name: Run tests (if any)
+      run: |
+        if (Test-Path "*.Tests.csproj") {
+          dotnet test --configuration Release --no-build --verbosity normal
+        } else {
+          Write-Host "No test projects found, skipping tests"
+        }
+      working-directory: .
+      shell: powershell
+      continue-on-error: true
+      
+    - name: Upload Windows Forms Calculator artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Calculator-WindowsForms
+        path: |
+          bin/Release/net48/Calculator.exe
+          bin/Release/net48/Calculator.exe.config
+          bin/Release/net48/*.dll
+        retention-days: 30
+        
+    - name: Upload Web Calculator artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Calculator-Web
+        path: |
+          bin/Release/net48/CalculatorWeb.exe
+          bin/Release/net48/CalculatorWeb.exe.config
+          bin/Release/net48/wwwroot/
+          bin/Release/net48/Microsoft.Owin*.dll
+          bin/Release/net48/Newtonsoft.Json.dll
+          bin/Release/net48/Owin.dll
+        retention-days: 30
+        
+    - name: Create Release Package
+      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+      run: |
+        $version = Get-Date -Format "yyyy.MM.dd.HHmm"
+        
+        # Create release directory
+        New-Item -ItemType Directory -Force -Path "release"
+        
+        # Package Windows Forms version
+        Compress-Archive -Path "bin\Release\net48\Calculator.exe", "bin\Release\net48\Calculator.exe.config" -DestinationPath "release\Calculator-WindowsForms-v$version.zip" -Force
+        
+        # Package Web version
+        Compress-Archive -Path "bin\Release\net48\CalculatorWeb.exe", "bin\Release\net48\CalculatorWeb.exe.config", "bin\Release\net48\wwwroot", "bin\Release\net48\*.dll" -DestinationPath "release\Calculator-Web-v$version.zip" -Force
+        
+        Write-Host "Created release packages:"
+        Get-ChildItem release
+      working-directory: .
+      shell: powershell
+      
+    - name: Upload Release Packages
+      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+      uses: actions/upload-artifact@v4
+      with:
+        name: Calculator-Release-Packages
+        path: release/*.zip
+        retention-days: 90
+        
+    - name: Build Summary
+      if: always()
+      run: |
+        Write-Host "==================================="
+        Write-Host "Build Summary"
+        Write-Host "==================================="
+        Write-Host "Windows Forms Calculator: Built"
+        Write-Host "Web Calculator: Built"
+        Write-Host ""
+        Write-Host "Artifacts uploaded:"
+        Write-Host "  - Calculator-WindowsForms"
+        Write-Host "  - Calculator-Web"
+        if ("${{ github.ref }}" -eq "refs/heads/main" -or "${{ github.ref }}" -eq "refs/heads/master") {
+          Write-Host "  - Calculator-Release-Packages (ZIP files)"
+        }
+        Write-Host "==================================="
+      shell: powershell

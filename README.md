@@ -1,8 +1,10 @@
 # .NET Framework Calculator Application
 
-A simple console-based calculator application built with .NET Framework 4.8.
+[![Build Status](https://github.com/YOUR_USERNAME/YOUR_REPO/workflows/Build%20.NET%20Framework%20Calculator/badge.svg)](https://github.com/YOUR_USERNAME/YOUR_REPO/actions)
 
-## Features
+A modern calculator application built with .NET Framework 4.8, available in both **Windows Forms (desktop)** and **Web** versions.
+
+## 🚀 Features
 
 - **Addition**: Add two numbers
 - **Subtraction**: Subtract one number from another
