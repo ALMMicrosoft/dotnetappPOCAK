@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>.NET Framework Calculator - Web</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="calculator">
+            <div class="header">
+                <h1>.NET Framework Calculator</h1>
+            </div>
+            
+            <div class="display-container">
+                <div class="history" id="history"></div>
+                <div class="display" id="display">0</div>
+            </div>
+
+            <div class="buttons">
+                <!-- Row 1 -->
+                <button class="btn btn-clear" onclick="clearAll()">C</button>
+                <button class="btn btn-clear" onclick="clearEntry()">CE</button>
+                <button class="btn btn-operation" onclick="handleOperation('sqrt')">√</button>
+                <button class="btn btn-operation" onclick="handleOperation('divide')">÷</button>
+
+                <!-- Row 2 -->
+                <button class="btn btn-number" onclick="appendNumber('7')">7</button>
+                <button class="btn btn-number" onclick="appendNumber('8')">8</button>
+                <button class="btn btn-number" onclick="appendNumber('9')">9</button>
+                <button class="btn btn-operation" onclick="handleOperation('multiply')">×</button>
+
+                <!-- Row 3 -->
+                <button class="btn btn-number" onclick="appendNumber('4')">4</button>
+                <button class="btn btn-number" onclick="appendNumber('5')">5</button>
+                <button class="btn btn-number" onclick="appendNumber('6')">6</button>
+                <button class="btn btn-operation" onclick="handleOperation('subtract')">−</button>
+
+                <!-- Row 4 -->
+                <button class="btn btn-number" onclick="appendNumber('1')">1</button>
+                <button class="btn btn-number" onclick="appendNumber('2')">2</button>
+                <button class="btn btn-number" onclick="appendNumber('3')">3</button>
+                <button class="btn btn-operation" onclick="handleOperation('add')">+</button>
+
+                <!-- Row 5 -->
+                <button class="btn btn-operation" onclick="handleOperation('power')">x^y</button>
+                <button class="btn btn-number" onclick="appendNumber('0')">0</button>
+                <button class="btn btn-number" onclick="appendDecimal()">.</button>
+                <button class="btn btn-equals" onclick="calculate()">=</button>
+            </div>
+
+            <div class="footer">
+                <button class="btn-about" onclick="showAbout()">About</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Modal -->
+    <div id="aboutModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAbout()">&times;</span>
+            <div class="modal-header">
+                <h2>Calculator</h2>
+            </div>
+            <div class="modal-body">
+                <p><strong>Version 1.0.0</strong></p>
+                <p>A modern calculator application built with<br>.NET Framework 4.8 and ASP.NET.</p>
+                <p><strong>Features:</strong></p>
+                <ul>
+                    <li>Basic arithmetic operations</li>
+                    <li>Power and square root functions</li>
+                    <li>Clean and intuitive UI</li>
+                    <li>Web-based interface</li>
+                </ul>
+            </div>
+            <button class="btn-ok" onclick="closeAbout()">OK</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

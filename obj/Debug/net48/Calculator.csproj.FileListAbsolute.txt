@@ -1,0 +1,8 @@
+D:\CopliotPOCdotnetapp\dotnetappPOCAK\obj\Debug\net48\Calculator.csproj.AssemblyReference.cache
+D:\CopliotPOCdotnetapp\dotnetappPOCAK\obj\Debug\net48\Calculator.GeneratedMSBuildEditorConfig.editorconfig
+D:\CopliotPOCdotnetapp\dotnetappPOCAK\obj\Debug\net48\Calculator.csproj.CoreCompileInputs.cache
+D:\CopliotPOCdotnetapp\dotnetappPOCAK\bin\Debug\net48\Calculator.exe.config
+D:\CopliotPOCdotnetapp\dotnetappPOCAK\bin\Debug\net48\Calculator.exe
+D:\CopliotPOCdotnetapp\dotnetappPOCAK\bin\Debug\net48\Calculator.pdb
+D:\CopliotPOCdotnetapp\dotnetappPOCAK\obj\Debug\net48\Calculator.exe
+D:\CopliotPOCdotnetapp\dotnetappPOCAK\obj\Debug\net48\Calculator.pdb
