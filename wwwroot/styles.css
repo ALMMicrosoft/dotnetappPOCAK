@@ -6,7 +6,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
     min-height: 100vh;
     display: flex;
     justify-content: center;
@@ -27,7 +27,7 @@ body {
 }
 
 .header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
     color: white;
     padding: 20px;
     text-align: center;
@@ -102,12 +102,12 @@ body {
 }
 
 .btn-operation {
-    background: #667eea;
+    background: #2a5298;
     color: white;
 }
 
 .btn-operation:hover {
-    background: #5568d3;
+    background: #1e3c72;
 }
 
 .btn-clear {
@@ -137,7 +137,7 @@ body {
 .btn-about {
     padding: 10px 30px;
     font-size: 14px;
-    background: #667eea;
+    background: #2a5298;
     color: white;
     border: none;
     border-radius: 8px;
@@ -146,7 +146,7 @@ body {
 }
 
 .btn-about:hover {
-    background: #5568d3;
+    background: #1e3c72;
     transform: translateY(-2px);
 }
 
@@ -191,7 +191,7 @@ body {
 }
 
 .modal-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
     color: white;
     padding: 30px 20px;
     border-radius: 15px 15px 0 0;
@@ -237,7 +237,7 @@ body {
     display: block;
     margin: 0 auto 20px;
     padding: 12px 40px;
-    background: #667eea;
+    background: #2a5298;
     color: white;
     border: none;
     border-radius: 8px;
@@ -248,7 +248,7 @@ body {
 }
 
 .btn-ok:hover {
-    background: #5568d3;
+    background: #1e3c72;
     transform: translateY(-2px);
 }
 
