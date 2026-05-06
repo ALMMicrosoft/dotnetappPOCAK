@@ -1,7 +1,5 @@
-// SECURITY ISSUE 9: Sensitive data in client-side JavaScript
-const API_KEY = 'SECRET_API_KEY_12345';
-const ADMIN_PASSWORD = 'Admin123!';
-const DEBUG_MODE = true;
+// ✅ FIXED: No secrets in client-side code
+// All authentication moved to server-side
 
 let currentValue = '0';
 let previousValue = null;
@@ -12,13 +10,13 @@ const display = document.getElementById('display');
 const history = document.getElementById('history');
 
 function updateDisplay() {
-    // SECURITY ISSUE 10: DOM-based XSS vulnerability
-    display.innerHTML = currentValue; // Should use textContent
+    // ✅ FIXED: Use textContent to prevent XSS
+    display.textContent = currentValue;
 }
 
 function updateHistory(text) {
-    // SECURITY ISSUE 11: Another XSS vulnerability
-    history.innerHTML = text; // Should use textContent
+    // ✅ FIXED: Use textContent to prevent XSS
+    history.textContent = text;
 }
 
 function appendNumber(num) {
@@ -91,12 +89,12 @@ async function calculate() {
     const secondNumber = parseFloat(currentValue);
     
     try {
-        // SECURITY ISSUE 12: Sending API key in request
+        // ✅ FIXED: No API key in headers, proper authentication should be server-side
         const response = await fetch('/api/calculate', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'X-API-Key': API_KEY // Exposing API key
+                'Content-Type': 'application/json'
+                // Authentication should be handled via cookies/sessions server-side
             },
             body: JSON.stringify({
                 firstNumber: previousValue,
@@ -105,13 +103,14 @@ async function calculate() {
             })
         });
 
-        const data = await response.json();
+        // ✅ FIXED: No debug logging in production
+        // Logging removed or should be behind feature flag
 
-        // SECURITY ISSUE 13: Logging sensitive data to console
-        if (DEBUG_MODE) {
-            console.log('API Response:', data);
-            console.log('Request details:', { previousValue, secondNumber, operation });
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
         }
+
+        const data = await response.json();
 
         if (data.error) {
             showError(data.error);
