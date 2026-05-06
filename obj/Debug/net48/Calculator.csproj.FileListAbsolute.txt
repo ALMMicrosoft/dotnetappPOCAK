@@ -6,3 +6,11 @@ D:/CopliotPOCdotnetapp/dotnetappPOCAK/bin/Debug/net48/Calculator.exe
 D:/CopliotPOCdotnetapp/dotnetappPOCAK/bin/Debug/net48/Calculator.pdb
 D:/CopliotPOCdotnetapp/dotnetappPOCAK/obj/Debug/net48/Calculator.exe
 D:/CopliotPOCdotnetapp/dotnetappPOCAK/obj/Debug/net48/Calculator.pdb
+/home/runner/work/dotnetappPOCAK/dotnetappPOCAK/bin/Debug/net48/Calculator.exe.config
+/home/runner/work/dotnetappPOCAK/dotnetappPOCAK/bin/Debug/net48/Calculator.exe
+/home/runner/work/dotnetappPOCAK/dotnetappPOCAK/bin/Debug/net48/Calculator.pdb
+/home/runner/work/dotnetappPOCAK/dotnetappPOCAK/obj/Debug/net48/Calculator.GeneratedMSBuildEditorConfig.editorconfig
+/home/runner/work/dotnetappPOCAK/dotnetappPOCAK/obj/Debug/net48/Calculator.csproj.CoreCompileInputs.cache
+/home/runner/work/dotnetappPOCAK/dotnetappPOCAK/obj/Debug/net48/Calculator.sourcelink.json
+/home/runner/work/dotnetappPOCAK/dotnetappPOCAK/obj/Debug/net48/Calculator.exe
+/home/runner/work/dotnetappPOCAK/dotnetappPOCAK/obj/Debug/net48/Calculator.pdb
