@@ -34,7 +34,7 @@ namespace Calculator
             {
                 Location = new Point(20, 20),
                 Size = new Size(340, 40),
-                Font = new Font("Segoe UI", 20, FontStyle.Bold),
+                Font = new Font(FontFamily.GenericSansSerif, 20, FontStyle.Bold),
                 TextAlign = HorizontalAlignment.Right,
                 ReadOnly = true,
                 Text = "0",
@@ -47,7 +47,7 @@ namespace Calculator
             {
                 Location = new Point(20, 70),
                 Size = new Size(340, 30),
-                Font = new Font("Segoe UI", 10),
+                Font = new Font(FontFamily.GenericSansSerif, 10),
                 TextAlign = HorizontalAlignment.Right,
                 ReadOnly = true,
                 BackColor = Color.FromArgb(250, 250, 250),
@@ -110,7 +110,7 @@ namespace Calculator
                 Text = text,
                 Location = new Point(x, y),
                 Size = new Size(width, height),
-                Font = new Font("Segoe UI", 14, FontStyle.Bold),
+                Font = new Font(FontFamily.GenericSansSerif, 14, FontStyle.Bold),
                 FlatStyle = FlatStyle.Flat,
                 Cursor = Cursors.Hand
             };

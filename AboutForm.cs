@@ -35,7 +35,7 @@ namespace Calculator
                 Text = "Calculator",
                 Location = new Point(20, 20),
                 Size = new Size(360, 40),
-                Font = new Font("Segoe UI", 24, FontStyle.Bold),
+                Font = new Font(FontFamily.GenericSansSerif, 24, FontStyle.Bold),
                 ForeColor = Color.White,
                 BackColor = Color.Transparent
             };
@@ -47,7 +47,7 @@ namespace Calculator
                 Text = "Version 1.0.0",
                 Location = new Point(20, 100),
                 Size = new Size(360, 30),
-                Font = new Font("Segoe UI", 12),
+                Font = new Font(FontFamily.GenericSansSerif, 12),
                 ForeColor = Color.FromArgb(100, 100, 100)
             };
             this.Controls.Add(lblVersion);
@@ -58,7 +58,7 @@ namespace Calculator
                 Text = "A modern calculator application built with\n.NET Framework 4.8 and Windows Forms.\n\nFeatures:\n• Basic arithmetic operations\n• Power and square root functions\n• Clean and intuitive UI",
                 Location = new Point(20, 140),
                 Size = new Size(360, 100),
-                Font = new Font("Segoe UI", 10),
+                Font = new Font(FontFamily.GenericSansSerif, 10),
                 ForeColor = Color.Black
             };
             this.Controls.Add(lblDescription);
@@ -69,7 +69,7 @@ namespace Calculator
                 Text = "OK",
                 Location = new Point(150, 220),
                 Size = new Size(100, 35),
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Font = new Font(FontFamily.GenericSansSerif, 10, FontStyle.Bold),
                 BackColor = Color.FromArgb(0, 122, 255),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
