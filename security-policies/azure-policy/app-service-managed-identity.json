@@ -1,0 +1,32 @@
+{
+  "properties": {
+    "displayName": "App Service should use managed identity",
+    "policyType": "Custom",
+    "mode": "All",
+    "description": "This policy ensures that all App Services have managed identity enabled for secure access to Azure resources.",
+    "metadata": {
+      "version": "1.0.0",
+      "category": "App Service",
+      "createdBy": "Security Team",
+      "createdOn": "2026-05-08"
+    },
+    "parameters": {},
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "type",
+            "equals": "Microsoft.Web/sites"
+          },
+          {
+            "field": "identity.type",
+            "exists": "false"
+          }
+        ]
+      },
+      "then": {
+        "effect": "deny"
+      }
+    }
+  }
+}

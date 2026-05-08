@@ -1,0 +1,241 @@
+# GitHub Actions - Deploy .NET Calculator to Azure App Service
+# This workflow builds, tests, and deploys the application to Azure App Service
+
+name: Deploy to Azure App Service
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - production
+
+env:
+  DOTNET_VERSION: '4.8'
+  ARTIFACT_NAME: 'calculator-app'
+
+jobs:
+  build:
+    name: Build Application
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1.1
+
+      - name: Setup NuGet
+        uses: nuget/setup-nuget@v1
+
+      - name: Restore NuGet packages
+        run: |
+          nuget restore Calculator.csproj
+          nuget restore CalculatorWeb.csproj
+
+      - name: Build Windows Forms Calculator
+        run: msbuild Calculator.csproj /p:Configuration=Release /p:Platform="Any CPU"
+
+      - name: Build Web Calculator
+        run: msbuild CalculatorWeb.csproj /p:Configuration=Release /p:Platform="Any CPU"
+
+      - name: Copy wwwroot files
+        run: |
+          Copy-Item -Path "wwwroot\*" -Destination "bin\Release\net48\wwwroot\" -Recurse -Force
+
+      - name: Run Security Scan
+        run: |
+          Write-Host "Running security checks..."
+          # Add your security scanning tools here
+          # Example: dotnet tool install --global security-scan
+          # security-scan --path . --output security-report.json
+
+      - name: Create deployment package
+        run: |
+          $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
+          Compress-Archive -Path "bin\Release\net48\*" -DestinationPath "calculator-web-$timestamp.zip"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: |
+            bin/Release/net48/**/*
+          retention-days: 30
+
+      - name: Upload deployment package
+        uses: actions/upload-artifact@v3
+        with:
+          name: deployment-package
+          path: calculator-web-*.zip
+          retention-days: 90
+
+  terraform-plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Terraform Init
+        working-directory: ./terraform-appservice-environment/dev
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: ./terraform-appservice-environment/dev
+        run: terraform plan -out=tfplan
+        env:
+          TF_VAR_db_connection_string: ${{ secrets.DB_CONNECTION_STRING }}
+          TF_VAR_api_key: ${{ secrets.API_KEY }}
+          TF_VAR_security_contact_email: ${{ secrets.SECURITY_EMAIL }}
+
+  deploy-dev:
+    name: Deploy to Development
+    runs-on: windows-latest
+    needs: build
+    if: github.ref == 'refs/heads/develop'
+    environment:
+      name: development
+      url: ${{ steps.deploy.outputs.webapp-url }}
+    
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ./app
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy to Azure App Service
+        id: deploy
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME_DEV }}
+          package: ./app
+
+      - name: Run smoke tests
+        run: |
+          $url = "${{ steps.deploy.outputs.webapp-url }}"
+          Write-Host "Running smoke tests against $url"
+          $response = Invoke-WebRequest -Uri "$url" -UseBasicParsing
+          if ($response.StatusCode -ne 200) {
+            throw "Smoke test failed: Status code $($response.StatusCode)"
+          }
+          Write-Host "✅ Smoke tests passed!"
+
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: windows-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: staging
+      url: ${{ steps.deploy.outputs.webapp-url }}
+    
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: deployment-package
+          path: ./package
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy to Staging Slot
+        id: deploy
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME_PROD }}
+          slot-name: staging
+          package: ./package/*.zip
+
+      - name: Run integration tests
+        run: |
+          Write-Host "Running integration tests..."
+          # Add your integration test commands here
+
+      - name: Run security tests
+        run: |
+          Write-Host "Running security tests..."
+          # Add OWASP ZAP or other security testing tools
+
+  deploy-production:
+    name: Deploy to Production (Slot Swap)
+    runs-on: windows-latest
+    needs: deploy-staging
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://${{ secrets.AZURE_WEBAPP_NAME_PROD }}.azurewebsites.net
+    
+    steps:
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Swap Staging to Production
+        run: |
+          az webapp deployment slot swap `
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} `
+            --name ${{ secrets.AZURE_WEBAPP_NAME_PROD }} `
+            --slot staging `
+            --target-slot production
+
+      - name: Post-deployment health check
+        run: |
+          $url = "https://${{ secrets.AZURE_WEBAPP_NAME_PROD }}.azurewebsites.net"
+          Write-Host "Checking production health at $url"
+          Start-Sleep -Seconds 30
+          
+          $response = Invoke-WebRequest -Uri "$url" -UseBasicParsing
+          if ($response.StatusCode -ne 200) {
+            Write-Error "Production health check failed!"
+            # Rollback
+            az webapp deployment slot swap `
+              --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} `
+              --name ${{ secrets.AZURE_WEBAPP_NAME_PROD }} `
+              --slot production `
+              --target-slot staging
+            throw "Deployment rolled back due to health check failure"
+          }
+          Write-Host "✅ Production deployment successful!"
+
+      - name: Notify team
+        if: always()
+        run: |
+          # Add notification logic (Slack, Teams, Email)
+          Write-Host "Deployment completed: ${{ job.status }}"

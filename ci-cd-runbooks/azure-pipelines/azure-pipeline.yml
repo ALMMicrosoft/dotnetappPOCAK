@@ -1,0 +1,238 @@
+# Azure DevOps Pipeline - Deploy .NET Calculator to Azure App Service
+# This pipeline builds, tests, and deploys the application using Azure Pipelines
+
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+  paths:
+    exclude:
+      - '**.md'
+      - 'docs/**'
+
+pr:
+  branches:
+    include:
+      - main
+
+variables:
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+  azureSubscription: 'Azure-Service-Connection'
+
+stages:
+  - stage: Build
+    displayName: 'Build Application'
+    jobs:
+      - job: BuildJob
+        displayName: 'Build .NET Framework App'
+        pool:
+          vmImage: 'windows-latest'
+        
+        steps:
+          - task: NuGetToolInstaller@1
+            displayName: 'Install NuGet'
+
+          - task: NuGetCommand@2
+            displayName: 'Restore NuGet Packages'
+            inputs:
+              restoreSolution: '$(solution)'
+
+          - task: VSBuild@1
+            displayName: 'Build Calculator (Windows Forms)'
+            inputs:
+              solution: 'Calculator.csproj'
+              platform: '$(buildPlatform)'
+              configuration: '$(buildConfiguration)'
+
+          - task: VSBuild@1
+            displayName: 'Build CalculatorWeb'
+            inputs:
+              solution: 'CalculatorWeb.csproj'
+              platform: '$(buildPlatform)'
+              configuration: '$(buildConfiguration)'
+
+          - task: PowerShell@2
+            displayName: 'Copy wwwroot files'
+            inputs:
+              targetType: 'inline'
+              script: |
+                Copy-Item -Path "wwwroot\*" -Destination "bin\Release\net48\wwwroot\" -Recurse -Force
+                Write-Host "✅ wwwroot files copied successfully"
+
+          - task: ArchiveFiles@2
+            displayName: 'Create deployment package'
+            inputs:
+              rootFolderOrFile: '$(Build.SourcesDirectory)/bin/Release/net48'
+              includeRootFolder: false
+              archiveType: 'zip'
+              archiveFile: '$(Build.ArtifactStagingDirectory)/calculator-web-$(Build.BuildId).zip'
+              replaceExistingArchive: true
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish artifacts'
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+              ArtifactName: 'drop'
+              publishLocation: 'Container'
+
+  - stage: SecurityScan
+    displayName: 'Security Scanning'
+    dependsOn: Build
+    jobs:
+      - job: SecurityScanJob
+        displayName: 'Run Security Scans'
+        pool:
+          vmImage: 'windows-latest'
+        
+        steps:
+          - task: DownloadBuildArtifacts@1
+            inputs:
+              buildType: 'current'
+              downloadType: 'single'
+              artifactName: 'drop'
+              downloadPath: '$(System.ArtifactsDirectory)'
+
+          - task: PowerShell@2
+            displayName: 'Static Code Analysis'
+            inputs:
+              targetType: 'inline'
+              script: |
+                Write-Host "Running static code analysis..."
+                # Add SonarQube, Checkmarx, or other SAST tools
+
+          - task: PowerShell@2
+            displayName: 'Dependency Vulnerability Scan'
+            inputs:
+              targetType: 'inline'
+              script: |
+                Write-Host "Scanning dependencies for vulnerabilities..."
+                # Add OWASP Dependency Check or Snyk
+
+  - stage: DeployDev
+    displayName: 'Deploy to Development'
+    dependsOn: SecurityScan
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/develop'))
+    jobs:
+      - deployment: DeployDevJob
+        displayName: 'Deploy to Dev App Service'
+        pool:
+          vmImage: 'windows-latest'
+        environment: 'development'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureWebApp@1
+                  displayName: 'Deploy Azure Web App'
+                  inputs:
+                    azureSubscription: '$(azureSubscription)'
+                    appType: 'webApp'
+                    appName: '$(AZURE_WEBAPP_NAME_DEV)'
+                    package: '$(Pipeline.Workspace)/drop/*.zip'
+                    deploymentMethod: 'zipDeploy'
+
+                - task: PowerShell@2
+                  displayName: 'Smoke Tests'
+                  inputs:
+                    targetType: 'inline'
+                    script: |
+                      $url = "https://$(AZURE_WEBAPP_NAME_DEV).azurewebsites.net"
+                      Write-Host "Testing $url"
+                      $response = Invoke-WebRequest -Uri $url -UseBasicParsing
+                      if ($response.StatusCode -eq 200) {
+                        Write-Host "✅ Smoke test passed!"
+                      } else {
+                        Write-Error "❌ Smoke test failed!"
+                        exit 1
+                      }
+
+  - stage: DeployStaging
+    displayName: 'Deploy to Staging'
+    dependsOn: SecurityScan
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: DeployStagingJob
+        displayName: 'Deploy to Staging Slot'
+        pool:
+          vmImage: 'windows-latest'
+        environment: 'staging'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureWebApp@1
+                  displayName: 'Deploy to Staging Slot'
+                  inputs:
+                    azureSubscription: '$(azureSubscription)'
+                    appType: 'webApp'
+                    appName: '$(AZURE_WEBAPP_NAME_PROD)'
+                    package: '$(Pipeline.Workspace)/drop/*.zip'
+                    deploymentMethod: 'zipDeploy'
+                    slotName: 'staging'
+
+                - task: PowerShell@2
+                  displayName: 'Integration Tests'
+                  inputs:
+                    targetType: 'inline'
+                    script: |
+                      Write-Host "Running integration tests on staging..."
+                      # Add integration test commands
+
+  - stage: DeployProduction
+    displayName: 'Deploy to Production'
+    dependsOn: DeployStaging
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: DeployProductionJob
+        displayName: 'Slot Swap to Production'
+        pool:
+          vmImage: 'windows-latest'
+        environment: 'production'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureAppServiceManage@0
+                  displayName: 'Swap Staging to Production'
+                  inputs:
+                    azureSubscription: '$(azureSubscription)'
+                    Action: 'Swap Slots'
+                    WebAppName: '$(AZURE_WEBAPP_NAME_PROD)'
+                    ResourceGroupName: '$(AZURE_RESOURCE_GROUP)'
+                    SourceSlot: 'staging'
+                    SwapWithProduction: true
+
+                - task: PowerShell@2
+                  displayName: 'Production Health Check'
+                  inputs:
+                    targetType: 'inline'
+                    script: |
+                      Start-Sleep -Seconds 30
+                      $url = "https://$(AZURE_WEBAPP_NAME_PROD).azurewebsites.net"
+                      Write-Host "Checking production health..."
+                      
+                      try {
+                        $response = Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 30
+                        if ($response.StatusCode -eq 200) {
+                          Write-Host "✅ Production deployment successful!"
+                        } else {
+                          throw "Health check failed with status: $($response.StatusCode)"
+                        }
+                      } catch {
+                        Write-Error "❌ Health check failed: $_"
+                        Write-Host "Initiating rollback..."
+                        exit 1
+                      }
+
+                - task: PowerShell@2
+                  displayName: 'Send Deployment Notification'
+                  condition: always()
+                  inputs:
+                    targetType: 'inline'
+                    script: |
+                      $status = if ($env:AGENT_JOBSTATUS -eq 'Succeeded') { '✅ SUCCESS' } else { '❌ FAILED' }
+                      Write-Host "Deployment Status: $status"
+                      # Add Teams/Slack notification logic here
